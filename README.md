@@ -1,3 +1,2 @@
 # ue4_Metaball
-
-Developed with Unreal Engine 4
+![cover](/images/HighresScreenshot.png "cover")
