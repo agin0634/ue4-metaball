@@ -1,0 +1,59 @@
+struct RMStruct
+{
+    float sdSphere(float3 pos, float radius)
+    {
+        return length(pos) - pScale * radius;
+    }
+
+    float blob(float s1, float s2, float s3,float s4, float s5, float s6) 
+    {        
+        return -log(exp(-pK*s1)+exp(-pK*s2)+exp(-pK*s3)+exp(-pK*s4)+exp(-pK*s5)+exp(-pK*s6))/pK;
+    }
+
+    float scene(float3 pos)
+    {
+        float t = pTime * pSpeed;
+
+        float s1 = sdSphere(pos + pFar*0.5*float3(sin(t*0.1),cos(t*0.1),sin(t*0.8)),1.0);
+        float s2 = sdSphere(pos + pFar*float3(sin(t*0.5),cos(t*1.5),sin(t*0.5)),0.5);
+        float s3 = sdSphere(pos + pFar*float3(sin(t*1.0),cos(t*0.25),sin(t*0.75)),0.4);
+        float s4 = sdSphere(pos + -pFar*float3(sin(t*1.5),-cos(t*1.0),cos(t*1.5)),0.3);
+        float s5 = sdSphere(pos + -pFar*float3(-sin(t*1.0),cos(t*1.2),cos(t*1.2)),0.2);
+        float s6 = sdSphere(pos + -pFar*float3(-sin(t*1.5),-cos(t*1.2),cos(t*.5)),0.4);
+        
+        return blob(s1, s2, s3, s4, s5, s6);
+    }
+
+    float3 sdSphereNormal(float3 pos)
+	{
+		float2 offset = float2(0.01, 0);
+		return normalize(float3(
+		scene(pos + offset.xyy) -  scene(pos - offset.xyy),
+		scene(pos + offset.yxy) -  scene(pos - offset.yxy),
+		scene(pos + offset.yyx) -  scene(pos - offset.yyx)
+		));
+	}
+
+};
+
+RMStruct RM;
+float3 pos = pWorldPosition;
+float alpha = 0;
+float3 normal = 0;
+
+for (int i=0; i<pMaxSteps; i++)
+{
+    if (pSceneDepth < length(pos - pCameraPosition)) break;
+
+    float dis = RM.scene(pos - pObjectPosition);
+
+    if (dis < 0.001)
+    {
+        alpha = 1;
+        normal = RM.sdSphereNormal(pos - pObjectPosition);
+        break;
+    }
+    pos += pCameraVector * dis;
+}
+return float4(normal, alpha);
+
